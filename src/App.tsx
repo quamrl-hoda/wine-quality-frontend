@@ -1,4 +1,5 @@
 import React from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 
@@ -11,6 +12,7 @@ import {
   Contact,
   FAQ
 } from '@/components/sections'
+import { PredictionPage } from '@/pages/PredictionPage'
 import { ToastProvider } from '@/components/ui'
 
 // Professional MUI theme - Matte Black + Wine Red + Gold
@@ -120,34 +122,33 @@ const App: React.FC = () => {
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       <ToastProvider>
-        <div className="min-h-screen" style={{ backgroundColor: '#0F0F0F' }}>
-          {/* Navigation */}
-          <Navbar />
+        <BrowserRouter>
+          <div className="min-h-screen" style={{ backgroundColor: '#0F0F0F' }}>
+            {/* Navigation */}
+            <Navbar />
 
-          {/* Main Content */}
-          <main>
-            {/* Hero Section */}
-            <Hero />
+            {/* Routes */}
+            <Routes>
+              {/* Home Page */}
+              <Route path="/" element={
+                <main>
+                  <Hero />
+                  <About />
+                  <HowItWorks />
+                  <PredictionForm />
+                  <FAQ />
+                  <Contact />
+                </main>
+              } />
 
-            {/* About Section */}
-            <About />
+              {/* Prediction Results Page */}
+              <Route path="/prediction" element={<PredictionPage />} />
+            </Routes>
 
-            {/* How It Works Section */}
-            <HowItWorks />
-
-            {/* Prediction Form Section */}
-            <PredictionForm />
-
-            {/* FAQ Section */}
-            <FAQ />
-
-            {/* Contact Section */}
-            <Contact />
-          </main>
-
-          {/* Footer */}
-          <Footer />
-        </div>
+            {/* Footer */}
+            <Footer />
+          </div>
+        </BrowserRouter>
       </ToastProvider>
     </ThemeProvider>
   )

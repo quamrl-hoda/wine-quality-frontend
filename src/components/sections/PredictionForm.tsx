@@ -1,28 +1,18 @@
-import React, { useState, useRef } from 'react'
-import { motion, useInView, AnimatePresence } from 'framer-motion'
+import React from 'react'
+import { useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import {
-    Wine,
-    FlaskConical,
     RotateCcw,
     Sparkles,
-    CheckCircle2,
-    AlertCircle,
-    Loader2,
     Info,
-    Beaker,
-    TrendingUp,
-    Award
 } from 'lucide-react'
 import {
     Tooltip,
-    LinearProgress,
     Skeleton,
     Chip,
     CircularProgress
 } from '@mui/material'
-import { Button, Input, Card, CardContent, Badge, useToast } from '@/components/ui'
-import axios from 'axios'
-
+import { Button, Input, Card, CardContent, useToast } from '@/components/ui'
 interface WineFormData {
     fixed_acidity: string
     volatile_acidity: string
@@ -35,12 +25,6 @@ interface WineFormData {
     pH: string
     sulphates: string
     alcohol: string
-}
-
-interface PredictionResult {
-    quality: number
-    category: 'Poor' | 'Average' | 'Good' | 'Excellent'
-    confidence: number
 }
 
 const initialFormData: WineFormData = {
@@ -195,33 +179,6 @@ const formFields: FormFieldConfig[] = [
     },
 ]
 
-const getQualityInfo = (quality: number): { category: string; color: string; bgClass: string; gradient: string } => {
-    if (quality <= 4) return {
-        category: 'Poor',
-        color: '#ef4444',
-        bgClass: 'quality-poor',
-        gradient: 'from-red-500 to-red-600'
-    }
-    if (quality <= 5) return {
-        category: 'Average',
-        color: '#f97316',
-        bgClass: 'quality-average',
-        gradient: 'from-orange-500 to-orange-600'
-    }
-    if (quality <= 6) return {
-        category: 'Good',
-        color: '#22c55e',
-        bgClass: 'quality-good',
-        gradient: 'from-green-500 to-green-600'
-    }
-    return {
-        category: 'Excellent',
-        color: '#d4af37',
-        bgClass: 'quality-excellent',
-        gradient: 'from-gold-400 to-gold-600'
-    }
-}
-
 // Animated form field component
 const AnimatedFormField: React.FC<{
     field: FormFieldConfig
@@ -279,7 +236,6 @@ const AnimatedFormField: React.FC<{
         />
     </motion.div>
 )
-
 // Loading skeleton for form
 const FormSkeleton: React.FC = () => (
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -292,511 +248,138 @@ const FormSkeleton: React.FC = () => (
     </div>
 )
 
-// Result display component
-const ResultDisplay: React.FC<{ result: PredictionResult; isLoading: boolean }> = ({ result, isLoading }) => {
-    const qualityInfo = getQualityInfo(result.quality)
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="text-center w-full"
-        >
-            {/* Quality Score Circle */}
-            <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', delay: 0.2 }}
-                className="relative w-40 h-40 mx-auto mb-6"
-            >
-                {/* Background circle */}
-                <svg className="w-full h-full transform -rotate-90">
-                    <circle
-                        cx="80"
-                        cy="80"
-                        r="70"
-                        stroke="rgba(139, 38, 53, 0.3)"
-                        strokeWidth="8"
-                        fill="none"
-                    />
-                    <motion.circle
-                        cx="80"
-                        cy="80"
-                        r="70"
-                        stroke={qualityInfo.color}
-                        strokeWidth="8"
-                        fill="none"
-                        strokeLinecap="round"
-                        initial={{ pathLength: 0 }}
-                        animate={{ pathLength: result.quality / 10 }}
-                        transition={{ duration: 1.5, delay: 0.3, ease: 'easeOut' }}
-                        style={{
-                            strokeDasharray: '440',
-                            filter: `drop-shadow(0 0 10px ${qualityInfo.color}40)`,
-                        }}
-                    />
-                </svg>
-
-                {/* Center content */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.5, type: 'spring' }}
-                        className="text-5xl font-bold"
-                        style={{ color: qualityInfo.color }}
-                    >
-                        {result.quality}
-                    </motion.div>
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.7 }}
-                        className="text-xs text-cream-400/60 uppercase tracking-wider"
-                    >
-                        out of 10
-                    </motion.div>
-                </div>
-
-                {/* Glow effect */}
-                <motion.div
-                    className="absolute inset-0 rounded-full"
-                    style={{
-                        background: `radial-gradient(circle, ${qualityInfo.color}20 0%, transparent 70%)`
-                    }}
-                    animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                />
-            </motion.div>
-
-            {/* Category Badge */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className="mb-4"
-            >
-                <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className={`inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r ${qualityInfo.gradient} text-white font-semibold shadow-lg`}
-                >
-                    <Award className="w-5 h-5" />
-                    {result.category} Quality
-                </motion.div>
-            </motion.div>
-
-            {/* Confidence */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.7 }}
-                className="space-y-2"
-            >
-                <div className="flex items-center justify-center gap-2 text-sm text-cream-400/60">
-                    <TrendingUp className="w-4 h-4" />
-                    <span>Confidence: {result.confidence}%</span>
-                </div>
-                <LinearProgress
-                    variant="determinate"
-                    value={result.confidence}
-                    sx={{
-                        height: 6,
-                        borderRadius: 3,
-                        backgroundColor: 'rgba(139, 38, 53, 0.3)',
-                        '& .MuiLinearProgress-bar': {
-                            background: `linear-gradient(90deg, ${qualityInfo.color}, ${qualityInfo.color}cc)`,
-                            borderRadius: 3,
-                        },
-                    }}
-                />
-            </motion.div>
-        </motion.div>
-    )
-}
-
-export const PredictionForm: React.FC = () => {
-    const [formData, setFormData] = useState<WineFormData>(initialFormData)
-    const [errors, setErrors] = useState<Partial<WineFormData>>({})
-    const [isLoading, setIsLoading] = useState(false)
-    const [result, setResult] = useState<PredictionResult | null>(null)
-    const [apiError, setApiError] = useState<string | null>(null)
-
+export function PredictionForm() {
+    const navigate = useNavigate()
+    const [formData, setFormData] = React.useState<WineFormData>(initialFormData)
+    const [isLoading, setIsLoading] = React.useState(false)
+    const [errors, setErrors] = React.useState<Record<string, string>>({})
     const { showToast } = useToast()
-
-    const containerRef = useRef(null)
-    const isInView = useInView(containerRef, { once: true, margin: '-100px' })
-
-    const handleInputChange = (name: keyof WineFormData, value: string) => {
-        setFormData(prev => ({ ...prev, [name]: value }))
-        if (errors[name]) {
-            setErrors(prev => ({ ...prev, [name]: undefined }))
-        }
-        setApiError(null)
-    }
-
+    
     const validateForm = (): boolean => {
-        const newErrors: Partial<WineFormData> = {}
-        let isValid = true
-
-        formFields.forEach(field => {
-            const value = formData[field.name]
-            if (!value) {
-                newErrors[field.name] = 'Required'
-                isValid = false
-            } else {
-                const numValue = parseFloat(value)
-                if (isNaN(numValue)) {
-                    newErrors[field.name] = 'Invalid number'
-                    isValid = false
-                } else if (numValue < field.min || numValue > field.max) {
-                    newErrors[field.name] = `${field.min}-${field.max}`
-                    isValid = false
-                }
+        const newErrors: Record<string, string> = {}
+        
+        Object.entries(formData).forEach(([key, value]) => {
+            if (!value || isNaN(Number(value))) {
+                newErrors[key] = 'This field is required'
             }
         })
-
+        
         setErrors(newErrors)
-
-        if (!isValid) {
-            showToast('warning', 'Please fill in all fields correctly', 'Validation Error')
-        }
-
-        return isValid
+        return Object.keys(newErrors).length === 0
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-
-        if (!validateForm()) return
-
-        setIsLoading(true)
-        setResult(null)
-        setApiError(null)
-
-        try {
-            // Prepare form data for API
-            const formPayload = new FormData()
-            Object.entries(formData).forEach(([key, value]) => {
-                formPayload.append(key, value)
-            })
-
-            const response = await axios.post('/predict', formPayload, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            })
-
-            const quality = response.data.quality || Math.floor(Math.random() * 4) + 4
-            const qualityInfo = getQualityInfo(quality)
-
-            setResult({
-                quality,
-                category: qualityInfo.category as PredictionResult['category'],
-                confidence: 94,
-            })
-
-            showToast('success', `Your wine has been rated as ${qualityInfo.category} quality!`, 'Analysis Complete')
-        } catch (error) {
-            console.error('Prediction error:', error)
-            // For demo purposes, generate a mock result
-            const mockQuality = Math.floor(Math.random() * 4) + 4
-            const qualityInfo = getQualityInfo(mockQuality)
-            setResult({
-                quality: mockQuality,
-                category: qualityInfo.category as PredictionResult['category'],
-                confidence: 94,
-            })
-
-            showToast('success', `Your wine has been rated as ${qualityInfo.category} quality!`, 'Analysis Complete')
-        } finally {
-            setIsLoading(false)
+        
+        if (!validateForm()) {
+            showToast('error', 'Please fill in all fields correctly')
+            return
         }
+
+        // Navigate to prediction page with form data
+        navigate('/prediction', { state: { formData } })
     }
 
-    const handleFillSample = () => {
+    const handleLoadSample = () => {
         setFormData(sampleData)
-        setErrors({})
-        setResult(null)
-        setApiError(null)
-        showToast('info', 'Sample wine data has been loaded', 'Sample Data')
-    }
-
-    const handleReset = () => {
-        setFormData(initialFormData)
-        setErrors({})
-        setResult(null)
-        setApiError(null)
-        showToast('info', 'Form has been cleared', 'Reset')
+        showToast('success', 'Sample data loaded!')
     }
 
     return (
-        <section
-            id="predict"
-            className="relative py-24 lg:py-32 overflow-hidden"
-            ref={containerRef}
-        >
-            {/* Background */}
-            <div className="absolute inset-0 bg-gradient-to-b from-wine-950/30 via-transparent to-wine-950/30" />
-            <motion.div
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-wine-600/10 rounded-full blur-[200px]"
-                animate={{ scale: [1, 1.1, 1], opacity: [0.1, 0.15, 0.1] }}
-                transition={{ duration: 8, repeat: Infinity }}
-            />
-
-            <div className="container mx-auto px-4 lg:px-8 relative z-10">
-                {/* Section Header */}
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={isInView ? { opacity: 1, y: 0 } : {}}
-                    transition={{ duration: 0.6 }}
-                    className="text-center max-w-3xl mx-auto mb-16"
-                >
-                    <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        className="inline-block"
+        <section id="predict" className="py-16 px-4 sm:px-6 lg:px-8 bg-linear-to-b from-wine-950 via-wine-900 to-wine-950">
+            <div className="max-w-6xl mx-auto">
+                <div className="text-center mb-12">
+                    <motion.h2
+                        initial={{ opacity: 0, y: -20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="text-4xl md:text-5xl font-bold text-cream-50 mb-4"
                     >
-                        <Badge variant="secondary" className="mb-4">
-                            <motion.span
-                                animate={{ rotate: [0, 360] }}
-                                transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-                            >
-                                <FlaskConical className="w-3.5 h-3.5 mr-1.5" />
-                            </motion.span>
-                            Wine Analysis
-                        </Badge>
-                    </motion.div>
-                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold font-serif mb-6">
-                        <span className="text-cream-100">Predict Your </span>
-                        <motion.span
-                            className="gradient-text inline-block"
-                            animate={{
-                                textShadow: [
-                                    '0 0 20px rgba(212, 175, 55, 0)',
-                                    '0 0 40px rgba(212, 175, 55, 0.3)',
-                                    '0 0 20px rgba(212, 175, 55, 0)',
-                                ]
-                            }}
-                            transition={{ duration: 3, repeat: Infinity }}
-                        >
-                            Wine Quality
-                        </motion.span>
-                    </h2>
-                    <p className="text-lg text-cream-300/70 leading-relaxed">
-                        Enter your wine's chemical properties below and our AI will instantly
-                        predict its quality score with high accuracy.
-                    </p>
-                </motion.div>
-
-                <div className="max-w-6xl mx-auto">
-                    <div className="grid lg:grid-cols-3 gap-8">
-                        {/* Form Card */}
-                        <motion.div
-                            initial={{ opacity: 0, x: -30 }}
-                            animate={isInView ? { opacity: 1, x: 0 } : {}}
-                            transition={{ duration: 0.6, delay: 0.2 }}
-                            className="lg:col-span-2"
-                        >
-                            <Card className="p-6 lg:p-8">
-                                <CardContent className="p-0">
-                                    <form onSubmit={handleSubmit}>
-                                        {/* Quick Actions */}
-                                        <div className="flex flex-wrap gap-3 mb-8">
-                                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={handleFillSample}
-                                                    className="group"
-                                                >
-                                                    <motion.span
-                                                        animate={{ rotate: [0, 10, -10, 0] }}
-                                                        transition={{ duration: 2, repeat: Infinity }}
-                                                    >
-                                                        <Beaker className="w-4 h-4" />
-                                                    </motion.span>
-                                                    Fill Sample Data
-                                                </Button>
-                                            </motion.div>
-                                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={handleReset}
-                                                >
-                                                    <RotateCcw className="w-4 h-4" />
-                                                    Reset Form
-                                                </Button>
-                                            </motion.div>
-                                        </div>
-
-                                        {/* Form Grid */}
-                                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                                            {formFields.map((field, index) => (
-                                                <AnimatedFormField
-                                                    key={field.name}
-                                                    field={field}
-                                                    value={formData[field.name]}
-                                                    error={errors[field.name]}
-                                                    onChange={(value) => handleInputChange(field.name, value)}
-                                                    index={index}
-                                                    isInView={isInView}
-                                                />
-                                            ))}
-                                        </div>
-
-                                        {/* API Error */}
-                                        <AnimatePresence>
-                                            {apiError && (
-                                                <motion.div
-                                                    initial={{ opacity: 0, y: -10 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    exit={{ opacity: 0, y: -10 }}
-                                                    className="mt-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-3"
-                                                >
-                                                    <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                                                    <p className="text-sm text-red-300">{apiError}</p>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-
-                                        {/* Submit Button */}
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={isInView ? { opacity: 1, y: 0 } : {}}
-                                            transition={{ delay: 0.6 }}
-                                            className="mt-8"
-                                        >
-                                            <motion.div
-                                                whileHover={{ scale: 1.02 }}
-                                                whileTap={{ scale: 0.98 }}
-                                            >
-                                                <Button
-                                                    type="submit"
-                                                    size="xl"
-                                                    className="w-full sm:w-auto group relative overflow-hidden"
-                                                    disabled={isLoading}
-                                                >
-                                                    <motion.span
-                                                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-                                                        animate={{ x: ['-100%', '100%'] }}
-                                                        transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
-                                                    />
-                                                    {isLoading ? (
-                                                        <>
-                                                            <CircularProgress size={20} sx={{ color: 'white' }} />
-                                                            Analyzing Wine...
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                                                            Predict Quality
-                                                        </>
-                                                    )}
-                                                </Button>
-                                            </motion.div>
-                                        </motion.div>
-                                    </form>
-                                </CardContent>
-                            </Card>
-                        </motion.div>
-
-                        {/* Result Card */}
-                        <motion.div
-                            initial={{ opacity: 0, x: 30 }}
-                            animate={isInView ? { opacity: 1, x: 0 } : {}}
-                            transition={{ duration: 0.6, delay: 0.3 }}
-                        >
-                            <Card className="p-6 lg:p-8 h-full sticky top-24">
-                                <CardContent className="p-0 h-full flex flex-col">
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <motion.div
-                                            animate={{ rotate: [0, 10, -10, 0] }}
-                                            transition={{ duration: 4, repeat: Infinity }}
-                                        >
-                                            <Wine className="w-6 h-6 text-gold-400" />
-                                        </motion.div>
-                                        <h3 className="text-xl font-semibold text-cream-100">
-                                            Quality Result
-                                        </h3>
-                                    </div>
-
-                                    <div className="flex-1 flex items-center justify-center min-h-[300px]">
-                                        <AnimatePresence mode="wait">
-                                            {isLoading ? (
-                                                <motion.div
-                                                    key="loading"
-                                                    initial={{ opacity: 0, scale: 0.9 }}
-                                                    animate={{ opacity: 1, scale: 1 }}
-                                                    exit={{ opacity: 0, scale: 0.9 }}
-                                                    className="text-center"
-                                                >
-                                                    <div className="relative w-32 h-32 mx-auto mb-4">
-                                                        <motion.div
-                                                            className="absolute inset-0 rounded-full border-4 border-gold-400/20"
-                                                        />
-                                                        <motion.div
-                                                            className="absolute inset-0 rounded-full border-4 border-transparent border-t-gold-400"
-                                                            animate={{ rotate: 360 }}
-                                                            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                                                        />
-                                                        <motion.div
-                                                            animate={{
-                                                                scale: [1, 1.1, 1],
-                                                                rotate: [0, 5, -5, 0]
-                                                            }}
-                                                            transition={{ duration: 2, repeat: Infinity }}
-                                                            className="absolute inset-0 m-auto w-12 h-12 flex items-center justify-center"
-                                                        >
-                                                            <Wine className="w-12 h-12 text-gold-400" />
-                                                        </motion.div>
-                                                    </div>
-                                                    <motion.p
-                                                        className="text-cream-300/70"
-                                                        animate={{ opacity: [0.5, 1, 0.5] }}
-                                                        transition={{ duration: 1.5, repeat: Infinity }}
-                                                    >
-                                                        Analyzing wine properties...
-                                                    </motion.p>
-                                                </motion.div>
-                                            ) : result ? (
-                                                <ResultDisplay key="result" result={result} isLoading={isLoading} />
-                                            ) : (
-                                                <motion.div
-                                                    key="empty"
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: 1 }}
-                                                    exit={{ opacity: 0 }}
-                                                    className="text-center"
-                                                >
-                                                    <motion.div
-                                                        className="w-24 h-24 mx-auto mb-4 rounded-full bg-wine-800/30 flex items-center justify-center"
-                                                        animate={{
-                                                            boxShadow: [
-                                                                '0 0 0 rgba(212, 175, 55, 0)',
-                                                                '0 0 30px rgba(212, 175, 55, 0.1)',
-                                                                '0 0 0 rgba(212, 175, 55, 0)',
-                                                            ]
-                                                        }}
-                                                        transition={{ duration: 2, repeat: Infinity }}
-                                                    >
-                                                        <Wine className="w-10 h-10 text-cream-400/40" />
-                                                    </motion.div>
-                                                    <p className="text-cream-400/60 text-sm">
-                                                        Enter wine properties and click<br />
-                                                        "Predict Quality" to see results
-                                                    </p>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </motion.div>
-                    </div>
+                        Wine Quality Predictor
+                    </motion.h2>
+                    <motion.p
+                        initial={{ opacity: 0, y: -10 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.1 }}
+                        className="text-cream-200 text-lg"
+                    >
+                        Enter the wine properties below and let our AI predict its quality
+                    </motion.p>
                 </div>
+
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.2 }}
+                >
+                    <Card className="bg-wine-900/50 border-gold-400/20 shadow-2xl">
+                        <CardContent className="p-8">
+                            <form onSubmit={handleSubmit} className="space-y-8">
+                                {/* Form fields */}
+                                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {isLoading ? (
+                                        <FormSkeleton />
+                                    ) : (
+                                        formFields.map((field, index) => (
+                                            <AnimatedFormField
+                                                key={field.name}
+                                                field={field}
+                                                value={formData[field.name]}
+                                                onChange={(value) => {
+                                                    setFormData({
+                                                        ...formData,
+                                                        [field.name]: value
+                                                    })
+                                                    if (errors[field.name]) {
+                                                        setErrors({
+                                                            ...errors,
+                                                            [field.name]: ''
+                                                        })
+                                                    }
+                                                }}
+                                                error={errors[field.name]}
+                                                index={index}
+                                                isInView={true}
+                                            />
+                                        ))
+                                    )}
+                                </div>
+
+                                {/* Buttons */}
+                                <div className="flex gap-4 pt-4 border-t border-gold-400/10">
+                                    <Button
+                                        type="submit"
+                                        disabled={isLoading}
+                                        className="flex-1 bg-linear-to-r from-gold-400 to-gold-300 text-wine-950 font-semibold"
+                                    >
+                                        {isLoading ? (
+                                            <>
+                                                <CircularProgress size={20} sx={{ marginRight: '8px' }} />
+                                                Predicting...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Sparkles className="w-4 h-4 mr-2" />
+                                                Predict Quality
+                                            </>
+                                        )}
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        onClick={handleLoadSample}
+                                        disabled={isLoading}
+                                        className="flex-1 bg-wine-800/50 border border-gold-400/30 text-cream-200 hover:bg-wine-800 hover:border-gold-400/60"
+                                    >
+                                        <RotateCcw className="w-4 h-4 mr-2" />
+                                        Load Sample
+                                    </Button>
+                                </div>
+                            </form>
+                        </CardContent>
+                    </Card>
+                </motion.div>
             </div>
         </section>
     )
