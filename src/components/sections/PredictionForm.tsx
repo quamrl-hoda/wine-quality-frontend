@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { RotateCcw, Sparkles, Info } from "lucide-react";
-import { Tooltip, Skeleton, Chip, CircularProgress } from "@mui/material";
+import { Tooltip, Chip } from "@mui/material";
 import { Button, Input, Card, CardContent, useToast } from "@/components/ui";
 interface WineFormData {
   fixed_acidity: string;
@@ -232,31 +232,10 @@ const AnimatedFormField: React.FC<{
     />
   </motion.div>
 );
-// Loading skeleton for form
-const FormSkeleton: React.FC = () => (
-  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-    {[...Array(11)].map((_, i) => (
-      <div key={i} className="space-y-2">
-        <Skeleton
-          variant="text"
-          width={120}
-          height={20}
-          sx={{ bgcolor: "rgba(139, 38, 53, 0.3)" }}
-        />
-        <Skeleton
-          variant="rounded"
-          height={48}
-          sx={{ bgcolor: "rgba(139, 38, 53, 0.2)", borderRadius: "12px" }}
-        />
-      </div>
-    ))}
-  </div>
-);
 
 export function PredictionForm() {
   const navigate = useNavigate();
   const [formData, setFormData] = React.useState<WineFormData>(initialFormData);
-  const [isLoading, setIsLoading] = React.useState(false);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const { showToast } = useToast();
 
@@ -327,23 +306,20 @@ export function PredictionForm() {
               <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Form fields */}
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {isLoading ? (
-                    <FormSkeleton />
-                  ) : (
-                    formFields.map((field, index) => (
-                      <AnimatedFormField
-                        key={field.name}
-                        field={field}
-                        value={formData[field.name]}
-                        onChange={(value) => {
-                          setFormData({
-                            ...formData,
-                            [field.name]: value,
-                          });
-                          if (errors[field.name]) {
-                            setErrors({
-                              ...errors,
-                              [field.name]: "",
+                  {formFields.map((field, index) => (
+                    <AnimatedFormField
+                      key={field.name}
+                      field={field}
+                      value={formData[field.name]}
+                      onChange={(value) => {
+                        setFormData({
+                          ...formData,
+                          [field.name]: value,
+                        });
+                        if (errors[field.name]) {
+                          setErrors({
+                            ...errors,
+                            [field.name]: "",
                             });
                           }
                         }}
@@ -351,36 +327,21 @@ export function PredictionForm() {
                         index={index}
                         isInView={true}
                       />
-                    ))
-                  )}
+                    ))}
                 </div>
 
                 {/* Buttons */}
                 <div className="flex gap-4 pt-4 border-t border-gold-400/10">
                   <Button
                     type="submit"
-                    disabled={isLoading}
                     className="flex-1 bg-linear-to-r from-gold-400 to-gold-300 text-wine-950 font-semibold"
                   >
-                    {isLoading ? (
-                      <>
-                        <CircularProgress
-                          size={20}
-                          sx={{ marginRight: "8px" }}
-                        />
-                        Predicting...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Predict Quality
-                      </>
-                    )}
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Predict Quality
                   </Button>
                   <Button
                     type="button"
                     onClick={handleLoadSample}
-                    disabled={isLoading}
                     className="flex-1 bg-wine-800/50 border border-gold-400/30 text-cream-200 hover:bg-wine-800 hover:border-gold-400/60"
                   >
                     <RotateCcw className="w-4 h-4 mr-2" />
