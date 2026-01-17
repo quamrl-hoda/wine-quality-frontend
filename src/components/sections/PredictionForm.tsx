@@ -320,14 +320,14 @@ export function PredictionForm() {
                           setErrors({
                             ...errors,
                             [field.name]: "",
-                            });
-                          }
-                        }}
-                        error={errors[field.name]}
-                        index={index}
-                        isInView={true}
-                      />
-                    ))}
+                          });
+                        }
+                      }}
+                      error={errors[field.name]}
+                      index={index}
+                      isInView={true}
+                    />
+                  ))}
                 </div>
 
                 {/* Buttons */}
