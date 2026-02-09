@@ -15,7 +15,7 @@ export default defineConfig({
     port: 2222,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://wine-quality-ml-uws1.onrender.com/',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '/api'),
       },
