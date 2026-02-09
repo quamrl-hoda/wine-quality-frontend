@@ -503,24 +503,17 @@ export const PredictionForm: React.FC = () => {
 
         try {
             // Prepare form data for API
-            const formPayload = new FormData()
-            Object.entries(formData).forEach(([key, value]) => {
-                formPayload.append(key, value)
-            })
+            // Send JSON payload as expected by the Flask backend
+            const response = await axios.post('/api/predict', formData)
 
-            const response = await axios.post('/predict', formPayload, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            })
-
-            const quality = response.data.quality || Math.floor(Math.random() * 4) + 4
+            // Backend returns { success: true, prediction: number }
+            const quality = response.data.prediction;
             const qualityInfo = getQualityInfo(quality)
-
+            
             setResult({
                 quality,
                 category: qualityInfo.category as PredictionResult['category'],
-                confidence: 94,
+                confidence: 94, // Mock confidence for now
             })
 
             showToast('success', `Your wine has been rated as ${qualityInfo.category} quality!`, 'Analysis Complete')
